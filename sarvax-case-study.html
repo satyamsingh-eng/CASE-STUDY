@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SARVAX Case Study — Autonomous Interview Engine</title>
+  <style>
+    /* ─── RESET & BASE ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:   #0a0a0a;
+      --white:   #ffffff;
+      --gray-50: #f9f9f9;
+      --gray-100:#f2f2f2;
+      --gray-200:#e5e5e5;
+      --gray-400:#9a9a9a;
+      --gray-600:#555555;
+      --gray-800:#222222;
+      --accent:  #0a0a0a;
+      --font:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--white);
+      color: var(--black);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── TYPOGRAPHY ───────────────────────────────────────────────── */
+    h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+    h2 { font-size: clamp(1.4rem, 3vw, 2rem); }
+    h3 { font-size: 1.1rem; font-weight: 600; }
+
+    p { color: var(--gray-800); line-height: 1.75; }
+    p + p { margin-top: 1rem; }
+
+    /* ─── LAYOUT ───────────────────────────────────────────────────── */
+    .container  { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    .container--wide { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    section { padding: 80px 0; }
+    section + section { border-top: 1px solid var(--gray-200); }
+
+    /* ─── TOP BAR ──────────────────────────────────────────────────── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 16px 0;
+    }
+
+    .topbar__inner {
+      max-width: 960px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .topbar__brand {
+      font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--black);
+    }
+
+    .topbar__tag {
+      font-size: 0.75rem; font-weight: 500;
+      background: var(--black); color: var(--white);
+      padding: 4px 10px; border-radius: 100px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── HERO ─────────────────────────────────────────────────────── */
+    .hero {
+      padding: 100px 0 80px;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .hero__kicker {
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--gray-400);
+      margin-bottom: 20px;
+    }
+
+    .hero__headline {
+      max-width: 780px;
+      margin-bottom: 28px;
+    }
+
+    .hero__subline {
+      font-size: 1.15rem;
+      color: var(--gray-600);
+      max-width: 600px;
+      margin-bottom: 40px;
+    }
+
+    .hero__meta {
+      display: flex; flex-wrap: wrap; gap: 24px;
+      padding-top: 32px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .hero__meta-item { display: flex; flex-direction: column; gap: 4px; }
+
+    .hero__meta-label {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--gray-400);
+    }
+
+    .hero__meta-value {
+      font-size: 0.9rem; font-weight: 600; color: var(--black);
+    }
+
+    .hero__badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; font-weight: 600;
+      border: 1px solid var(--gray-200); padding: 6px 14px; border-radius: 100px;
+      color: var(--gray-600); margin-bottom: 20px;
+    }
+
+    .hero__badge::before {
+      content: ''; width: 6px; height: 6px;
+      background: #22c55e; border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ─── METRICS STRIP ────────────────────────────────────────────── */
+    .metrics {
+      background: var(--black);
+      padding: 64px 0;
+    }
+
+    .metrics__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0;
+    }
+
+    .metric {
+      padding: 32px;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .metric:last-child { border-right: none; }
+
+    .metric__number {
+      font-size: clamp(2.2rem, 4vw, 3rem);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric__label {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    /* ─── CALLOUT BLOCK ────────────────────────────────────────────── */
+    .callout {
+      background: var(--gray-50);
+      border-left: 3px solid var(--black);
+      padding: 24px 28px;
+      margin: 32px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .callout p {
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--gray-800);
+      margin: 0;
+    }
+
+    /* ─── SECTION LABELS ───────────────────────────────────────────── */
+    .section-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--gray-400);
+      margin-bottom: 16px;
+    }
+
+    /* ─── CHALLENGE / SOLUTION ─────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    @media (max-width: 700px) {
+      .two-col { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    /* ─── BEFORE / AFTER ───────────────────────────────────────────── */
+    .ba-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--gray-200);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 600px) {
+      .ba-grid { grid-template-columns: 1fr; }
+    }
+
+    .ba-col { padding: 36px 32px; background: var(--white); }
+    .ba-col--after { background: var(--black); }
+
+    .ba-col__label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .ba-col--before .ba-col__label { color: var(--gray-400); }
+    .ba-col--after  .ba-col__label { color: rgba(255,255,255,0.4); }
+
+    .ba-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+
+    .ba-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 0.9rem; line-height: 1.5;
+    }
+
+    .ba-col--before .ba-list li { color: var(--gray-600); }
+    .ba-col--after  .ba-list li { color: rgba(255,255,255,0.85); }
+
+    .ba-list li::before {
+      content: '';
+      width: 4px; height: 4px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 8px;
+    }
+
+    .ba-col--before .ba-list li::before { background: var(--gray-400); }
+    .ba-col--after  .ba-list li::before { background: rgba(255,255,255,0.4); }
+
+    /* ─── RESULTS ──────────────────────────────────────────────────── */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2px;
+      background: var(--gray-200);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 40px;
+    }
+
+    .result-card {
+      background: var(--white);
+      padding: 32px 28px;
+    }
+
+    .result-card__number {
+      font-size: 2rem; font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--black);
+      margin-bottom: 6px;
+    }
+
+    .result-card__desc {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      line-height: 1.5;
+    }
+
+    /* ─── WHAT THIS REPLACED ───────────────────────────────────────── */
+    .replaced-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .replaced-card {
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 24px 22px;
+    }
+
+    .replaced-card__icon {
+      font-size: 1.2rem; margin-bottom: 12px;
+      display: block;
+    }
+
+    .replaced-card__title {
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--black); margin-bottom: 6px;
+    }
+
+    .replaced-card__desc {
+      font-size: 0.8rem; color: var(--gray-600);
+      line-height: 1.5;
+    }
+
+    /* ─── CATEGORY FRAMING ─────────────────────────────────────────── */
+    .category-block {
+      background: var(--gray-50);
+      border-radius: 12px;
+      padding: 48px;
+      margin-top: 40px;
+    }
+
+    .category-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 28px;
+    }
+
+    .category-table th {
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--gray-400); padding: 10px 16px;
+      text-align: left; border-bottom: 1px solid var(--gray-200);
+    }
+
+    .category-table td {
+      font-size: 0.88rem; padding: 14px 16px;
+      border-bottom: 1px solid var(--gray-100);
+      color: var(--gray-800);
+    }
+
+    .category-table tr:last-child td { border-bottom: none; }
+
+    .category-table tr td:first-child { font-weight: 600; color: var(--black); }
+
+    .tag--no  {
+      display: inline-block; font-size: 0.7rem;
+      background: var(--gray-100); color: var(--gray-600);
+      padding: 2px 8px; border-radius: 4px; font-weight: 500;
+    }
+
+    .tag--yes {
+      display: inline-block; font-size: 0.7rem;
+      background: var(--black); color: var(--white);
+      padding: 2px 8px; border-radius: 4px; font-weight: 500;
+    }
+
+    /* ─── TESTIMONIAL ──────────────────────────────────────────────── */
+    .testimonial-block {
+      background: var(--black);
+      border-radius: 16px;
+      padding: 64px;
+      margin: 48px 0 0;
+    }
+
+    .testimonial-block__quote {
+      font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+      font-weight: 400;
+      color: var(--white);
+      line-height: 1.7;
+      font-style: italic;
+      margin-bottom: 32px;
+    }
+
+    .testimonial-block__attr {
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .testimonial-block__avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 700; color: var(--white);
+      flex-shrink: 0;
+    }
+
+    .testimonial-block__name {
+      font-size: 0.85rem; font-weight: 700; color: var(--white);
+    }
+
+    .testimonial-block__title {
+      font-size: 0.78rem; color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
+
+    /* ─── SOFT BENEFITS LIST ───────────────────────────────────────── */
+    .soft-list {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 14px;
+      margin-top: 28px;
+    }
+
+    .soft-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: 0.9rem; color: var(--gray-800); line-height: 1.5;
+    }
+
+    .soft-list li::before {
+      content: '→';
+      color: var(--gray-400);
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ─── DISCLAIMER ───────────────────────────────────────────────── */
+    .disclaimer {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-size: 0.78rem;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* ─── FOOTER ───────────────────────────────────────────────────── */
+    .footer {
+      padding: 48px 0;
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .footer__inner {
+      display: flex; flex-wrap: wrap;
+      justify-content: space-between; align-items: center;
+      gap: 16px;
+    }
+
+    .footer__brand {
+      font-size: 0.85rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .footer__copy {
+      font-size: 0.78rem; color: var(--gray-400);
+    }
+
+    /* ─── UTILITY ──────────────────────────────────────────────────── */
+    .mt-8  { margin-top: 8px;  }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mt-32 { margin-top: 32px; }
+    .mt-48 { margin-top: 48px; }
+
+    @media (max-width: 600px) {
+      section { padding: 56px 0; }
+      .testimonial-block { padding: 36px 28px; }
+      .category-block { padding: 28px 24px; }
+      .metric { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .metric:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <nav class="topbar">
+    <div class="topbar__inner">
+      <span class="topbar__brand">SARVAX</span>
+      <span class="topbar__tag">Case Study</span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <p class="hero__kicker">HR Agent · Autonomous Recruitment</p>
+      <div class="hero__badge">Modeled Deployment · Based on real-world workflows</div>
+      <h1 class="hero__headline">
+        From Manual Screening to Autonomous Interview Engine: How a Kenya-Based Tech Firm Scaled Hiring Without Adding Headcount
+      </h1>
+      <p class="hero__subline">
+        The same HR team. Twice the active roles. Zero interview coordination overhead. This is what autonomous execution looks like in practice.
+      </p>
+      <div class="hero__meta">
+        <div class="hero__meta-item">
+          <span class="hero__meta-label">Industry</span>
+          <span class="hero__meta-value">Software Services</span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-label">Geography</span>
+          <span class="hero__meta-value">Nairobi, Kenya</span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-label">Company Size</span>
+          <span class="hero__meta-value">~150 employees</span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-label">Department</span>
+          <span class="hero__meta-value">HR / Talent Acquisition</span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-label">SARVAX Agent</span>
+          <span class="hero__meta-value">HR Interview Bot</span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-label">Deployment</span>
+          <span class="hero__meta-value">90 days</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METRICS STRIP -->
+  <div class="metrics">
+    <div class="container--wide">
+      <div class="metrics__grid">
+        <div class="metric">
+          <div class="metric__number">60%</div>
+          <div class="metric__label">Reduction in time-to-shortlist per role</div>
+        </div>
+        <div class="metric">
+          <div class="metric__number">2×</div>
+          <div class="metric__label">Active roles managed by the same HR team</div>
+        </div>
+        <div class="metric">
+          <div class="metric__number">120+</div>
+          <div class="metric__label">Person-hours recovered per month</div>
+        </div>
+        <div class="metric">
+          <div class="metric__number">0</div>
+          <div class="metric__label">Interview sessions requiring HR coordination</div>
+        </div>
+        <div class="metric">
+          <div class="metric__number">73%</div>
+          <div class="metric__label">Average candidate fit score, auto-generated</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHALLENGE -->
+  <section>
+    <div class="container">
+      <p class="section-label">The Challenge</p>
+      <div class="two-col">
+        <div>
+          <h2>Hiring was running the team — not the other way around.</h2>
+        </div>
+        <div>
+          <p>
+            The company's 3-person HR team was managing 18 open roles across product, engineering, and operations. Every candidate required the same manual sequence: CV review in email, shortlisting via spreadsheet, WhatsApp scheduling back-and-forth, an initial screening call that ran 45–60 minutes, manual note-taking, and a written summary forwarded to the hiring manager.
+          </p>
+          <p>
+            At 18 active roles with an average of 12 candidates per role, the team was running 200+ hours of pure screening and coordination work per quarter — before a single hire was made. Roles that should have closed in 3 weeks were dragging to 8.
+          </p>
+          <p>
+            The bottleneck was not the talent market. It was the process. Every step waited for a coordinator to push it forward. The team had no capacity to handle more roles, no consistency across different interviewers, and no structured scoring system to compare candidates objectively.
+          </p>
+
+          <div class="callout">
+            <p>"We were spending more time scheduling calls than actually evaluating people. The process owned us — we didn't own the process."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORY FRAMING -->
+  <section style="background: var(--gray-50); padding: 80px 0;">
+    <div class="container">
+      <p class="section-label">What SARVAX Is — And What It Isn't</p>
+      <h2 style="max-width:600px; margin-bottom: 8px;">This is not automation.<br/>This is autonomous execution.</h2>
+      <p style="color: var(--gray-600); max-width: 560px; margin-bottom: 0;">
+        Most hiring tools assist your team. SARVAX replaces the execution layer entirely — so your team only handles decisions, not logistics.
+      </p>
+
+      <div class="category-block" style="padding-top: 0; background: transparent; border-radius: 0;">
+        <table class="category-table">
+          <thead>
+            <tr>
+              <th>Approach</th>
+              <th>What It Does</th>
+              <th>Still Needs Humans For</th>
+              <th>SARVAX?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ATS (e.g. Greenhouse, Lever)</td>
+              <td>Stores and tracks candidate data</td>
+              <td>Everything — screening, scheduling, scoring</td>
+              <td><span class="tag--no">Not this</span></td>
+            </tr>
+            <tr>
+              <td>Automation Tools (e.g. Zapier)</td>
+              <td>Triggers rules when conditions are met</td>
+              <td>Designing flows, monitoring, exception handling</td>
+              <td><span class="tag--no">Not this</span></td>
+            </tr>
+            <tr>
+              <td>AI Assistants (e.g. ChatGPT)</td>
+              <td>Responds when asked</td>
+              <td>Running any actual process</td>
+              <td><span class="tag--no">Not this</span></td>
+            </tr>
+            <tr>
+              <td>SARVAX HR Interview Bot</td>
+              <td>Joins Google Meet, conducts the interview, scores candidates, emails report — without being asked</td>
+              <td>Final hire decision only</td>
+              <td><span class="tag--yes">This</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOLUTION -->
+  <section>
+    <div class="container">
+      <p class="section-label">The Solution</p>
+      <div class="two-col">
+        <div>
+          <h2>SARVAX HR Interview Bot: The process runs itself.</h2>
+          <ul class="soft-list" style="margin-top: 24px;">
+            <li>AI generates tailored interview questions from the JD and candidate resume — no manual prep</li>
+            <li>Bot joins the Google Meet session and conducts the interview autonomously</li>
+            <li>Instant fit score generated post-interview with strengths, red flags, and structured rationale</li>
+            <li>Full report automatically emailed to the HR manager — no coordinator involvement</li>
+            <li>Complete candidate pipeline tracked in live dashboard with fit percentages and status</li>
+          </ul>
+        </div>
+        <div>
+          <p>
+            SARVAX deployed its HR Interview Bot into the company's recruitment pipeline. The integration was straightforward: HR uploads the job description and candidate CVs. The agent takes it from there.
+          </p>
+          <p>
+            Questions are generated from the intersection of the JD and each candidate's specific resume — meaning every interview is tailored, not templated. The bot joins the scheduled Google Meet link, conducts the full screening session, and produces a structured evaluation with fit score, candidate strengths, and flagged concerns.
+          </p>
+          <p>
+            The HR manager receives a complete report in their inbox — without scheduling a debrief, without reading through notes, without chasing a coordinator for a summary. The pipeline dashboard gives every stakeholder real-time visibility on candidate status and scoring across all active roles.
+          </p>
+          <p>
+            The team's coordinators were removed from the screening execution layer entirely. They now handle offer negotiation, candidate relationship management, and strategic workforce planning — the work they were hired for.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section style="background: var(--gray-50);">
+    <div class="container">
+      <p class="section-label">Results</p>
+      <h2>Measured outcomes — 90 days post-deployment</h2>
+      <p style="color: var(--gray-600); margin-top: 8px; font-size: 0.9rem;">
+        Estimated based on team size, role volume, and SARVAX deployment benchmarks. Actual figures will vary by org.
+      </p>
+
+      <div class="results-grid">
+        <div class="result-card">
+          <div class="result-card__number">60%</div>
+          <div class="result-card__desc">Reduction in time-to-shortlist — from 5–7 business days to same-day candidate evaluation</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card__number">2×</div>
+          <div class="result-card__desc">Active role capacity — same 3-person team managing 36 roles vs. 18 previously</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card__number">120 hrs</div>
+          <div class="result-card__desc">Person-hours recovered per month from eliminated screening coordination</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card__number">KES 180K</div>
+          <div class="result-card__desc">Monthly labor capacity unlocked — equivalent to 1 coordinator FTE at Nairobi market rates</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card__number">100%</div>
+          <div class="result-card__desc">Consistency in screening — every candidate evaluated on the same structured criteria</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card__number">73%</div>
+          <div class="result-card__desc">Average fit score across evaluated candidates — enabling faster, data-backed shortlisting</div>
+        </div>
+      </div>
+
+      <div class="mt-48">
+        <h3 class="mt-0" style="margin-bottom: 6px;">Soft Benefits</h3>
+        <ul class="soft-list">
+          <li>HR managers receive structured reports in their inbox — no debrief meetings, no chasing summaries</li>
+          <li>Consistent candidate experience regardless of team workload or coordinator availability</li>
+          <li>Hiring managers compare candidates via objective fit scores rather than subjective coordinator notes</li>
+          <li>Pipeline status visible to all stakeholders in real time — no status update overhead</li>
+          <li>Process is not dependent on any individual — zero disruption from absence, turnover, or team changes</li>
+          <li>Coordinators redeployed to offer negotiation and talent relationship work — higher value, lower attrition risk</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- BEFORE / AFTER -->
+  <section>
+    <div class="container">
+      <p class="section-label">Before / After</p>
+      <h2>The operational shift, directly stated</h2>
+
+      <div class="ba-grid">
+        <div class="ba-col ba-col--before">
+          <div class="ba-col__label">Before SARVAX</div>
+          <ul class="ba-list">
+            <li>CVs reviewed manually by coordinators across email and spreadsheets — 2–3 hours per role per review cycle</li>
+            <li>Initial screening calls conducted by HR staff — 45–60 min each, plus prep and debrief time</li>
+            <li>Scheduling done over WhatsApp and email — average 2–3 days to confirm a single interview slot</li>
+            <li>Subjective coordinator notes forwarded to hiring managers — inconsistent format, incomplete information</li>
+            <li>Pipeline status lived in coordinators' heads — no visibility without asking</li>
+            <li>18 active roles was the team's practical ceiling — any more and quality degraded</li>
+          </ul>
+        </div>
+        <div class="ba-col ba-col--after">
+          <div class="ba-col__label">After SARVAX</div>
+          <ul class="ba-list">
+            <li>CV uploaded → tailored interview questions generated automatically from JD + resume match</li>
+            <li>Bot joins Google Meet and conducts the full screening session — zero coordinator involvement</li>
+            <li>Fit score, strengths, and red flags delivered within minutes of interview completion</li>
+            <li>Structured report auto-emailed to HR manager — consistent format, every candidate, every time</li>
+            <li>Live pipeline dashboard — real-time visibility across all 36 active roles and candidate stages</li>
+            <li>36 active roles managed by the same team — with headroom to scale further without hiring</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT THIS REPLACED -->
+  <section style="background: var(--gray-50);">
+    <div class="container">
+      <p class="section-label">What This Actually Replaced</p>
+      <h2>Not just faster hiring. A different operating model.</h2>
+      <p style="color: var(--gray-600); max-width: 580px; margin-top: 8px;">
+        Most teams think about this as time savings. That undersells the structural shift. Here is what SARVAX actually eliminated.
+      </p>
+
+      <div class="replaced-grid">
+        <div class="replaced-card">
+          <span class="replaced-card__icon">👥</span>
+          <div class="replaced-card__title">1 FTE Equivalent in Execution Work</div>
+          <div class="replaced-card__desc">120 hrs/month of coordinator time recovered. At Nairobi market rates, that is KES 180,000/month in labor capacity redirected to higher-value work.</div>
+        </div>
+        <div class="replaced-card">
+          <span class="replaced-card__icon">🗂</span>
+          <div class="replaced-card__title">Fragmented Hiring Stack</div>
+          <div class="replaced-card__desc">Email + WhatsApp + Google Sheets + calendar — replaced by a single autonomous workflow from JD upload to scored report delivery.</div>
+        </div>
+        <div class="replaced-card">
+          <span class="replaced-card__icon">🧍</span>
+          <div class="replaced-card__title">Person-Dependent Process</div>
+          <div class="replaced-card__desc">Pipeline no longer stalls when a coordinator is absent, overloaded, or leaves. Every step runs on schedule regardless of team capacity.</div>
+        </div>
+        <div class="replaced-card">
+          <span class="replaced-card__icon">🎲</span>
+          <div class="replaced-card__title">Inconsistent Candidate Evaluation</div>
+          <div class="replaced-card__desc">Subjective screener notes replaced by structured fit scores with strengths and red flags — same criteria, every candidate, every time.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIAL -->
+  <section>
+    <div class="container">
+      <p class="section-label">Client Perspective</p>
+      <div class="testimonial-block">
+        <p class="testimonial-block__quote">
+          "We weren't looking for a tool to help our team screen faster. We were looking for something that could own screening entirely so our team didn't have to. What changed with SARVAX is that the process stopped depending on people to keep it moving. The bot conducts the interview, sends the report, tracks the pipeline — we just make the final call. We went from 18 to 36 active roles with the same team. That is not an efficiency gain. That is a different way of operating."
+        </p>
+        <div class="testimonial-block__attr">
+          <div class="testimonial-block__avatar">HO</div>
+          <div>
+            <div class="testimonial-block__name">Head of People Operations</div>
+            <div class="testimonial-block__title">Nairobi-based Software Services Firm · Modeled representative quote</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISCLAIMER -->
+  <section style="padding: 40px 0;">
+    <div class="container">
+      <div class="disclaimer">
+        <strong>Note on methodology:</strong> This case study is based on a modeled deployment using real-world hiring workflows and SARVAX HR Interview Bot capabilities as observed in product usage. Metrics reflect realistic outcomes for a software services firm of this profile. Product screenshots referenced show live SARVAX functionality including autonomous interview sessions, fit scoring, and candidate pipeline tracking. Actual client data will replace these estimates as deployments scale.
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <span class="footer__brand">SARVAX</span>
+        <span class="footer__copy">Autonomous Business Execution · Not Assistance. Execution. · sarvax.ai</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
