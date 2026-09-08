@@ -8,17 +8,19 @@ Working repository for C3A Labs case-study pages.
 
 ## Scope
 
-The current page covers:
+The current page is a meeting-first commercial case-study draft. It covers:
 
-- KARAX meeting capture and prepared notes
+- One illustrative client review meeting
+- Prepared meeting notes and decisions
 - Action items with owners and dates
-- Connections to approved existing tools
-- Human review before outbound updates
-- Industry-informed time modelling, clearly separated from client results
+- A follow-up message waiting for human approval
+- The controlled path into approved existing tools
+- An industry-informed time model, clearly separated from client results
+- A detailed GPT image prompt placeholder for a future editorial image
 
 ## Evidence boundary
 
-Elvaridah-specific Meeting Intelligence telemetry is not yet confirmed. The page labels the workflow as documented and the time model as illustrative until client validation is complete.
+Elvaridah-specific Meeting Intelligence telemetry, approved meeting records, and client-approved outcomes are not yet confirmed. The meeting output is an illustrative example. The time model is planning math, not a measured Elvaridah result. Replace both with approved evidence before external publication.
 
 ## Publication rule
 
